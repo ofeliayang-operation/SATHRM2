@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>知識衛星 · 人力工時管理</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Syne:wght@700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ════════════════════════════════════════
+   DESIGN TOKENS  —  higher-contrast dark
+════════════════════════════════════════ */
+:root {
+  --bg:      #0a0e17;
+  --s1:      #111827;
+  --s2:      #1a2336;
+  --s3:      #202d42;
+  --s4:      #263245;
+
+  --border:  #2c3d58;
+  --border2: #3a4e6a;
+
+  --accent:  #5b8eff;
+  --a2:      #3b6fdd;
+  --asft:    rgba(91,142,255,.18);
+
+  --green:   #34d99a;
+  --gsft:    rgba(52,217,154,.14);
+  --yellow:  #fbbf24;
+  --ysft:    rgba(251,191,36,.14);
+  --red:     #ff5f72;
+  --rsft:    rgba(255,95,114,.14);
+  --orange:  #fb8c3a;
+  --osft:    rgba(251,140,58,.14);
+  --teal:    #22d3ee;
+  --tsft:    rgba(34,211,238,.14);
+  --purple:  #c084fc;
+  --psft:    rgba(192,132,252,.14);
+
+  /* HIGH-CONTRAST TEXT LEVELS */
+  --tx0:  #f0f4ff;   /* headings / key numbers */
+  --tx1:  #c8d6f0;   /* body text */
+  --tx2:  #8ba4c8;   /* secondary labels */
+  --tx3:  #546888;   /* muted / placeholders */
+  --tx4:  #2e4060;   /* disabled */
+
+  --font:    'Noto Sans TC', sans-serif;
+  --disp:    'Syne', sans-serif;
+  --mono:    'DM Mono', monospace;
+  --r:       10px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--tx1); font-family: var(--font); font-size: 14px; min-height: 100vh; }
+
+/* ── TOPBAR ── */
+.topbar {
+  background: var(--s1); border-bottom: 1px solid var(--border);
+  height: 56px; display: flex; align-items: center; padding: 0 24px;
+  position: sticky; top: 0; z-index: 300; backdrop-filter: blur(12px);
+}
+.logo {
+  display: flex; align-items: center; gap: 10px;
+  padding-right: 24px; border-right: 1px solid var(--border);
+  white-space: nowrap;
+}
+.logo-icon {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: linear-gradient(135deg,#3b6fdd,#8b5cf6);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+.logo-text { font-family: var(--disp); font-size: 15px; font-weight: 800; color: var(--tx0); letter-spacing: .3px; }
+.logo-sub  { font-size: 10.5px; color: var(--tx3); margin-top: 1px; letter-spacing: .4px; }
+
+.tabs { display: flex; gap: 2px; padding-left: 16px; }
+.tab { background: none; border: none; color: var(--tx2); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-family: var(--font); font-size: 12.5px; font-weight: 500; transition: all .15s; white-space: nowrap; }
+.tab:hover { background: var(--s2); color: var(--tx0); }
+.tab.on { background: var(--accent); color: #fff; }
+.topbar-r { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--tx3); white-space: nowrap; }
+
+/* ── MAIN ── */
+.main { max-width: 1600px; margin: 0 auto; padding: 22px 24px; }
+
+/* ── FILTER BAR ── */
+.fbar {
+  background: var(--s1); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 14px 20px;
+  display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end;
+  margin-bottom: 22px;
+}
+.fg { display: flex; flex-direction: column; gap: 5px; }
+.fl { font-size: 10px; color: var(--tx2); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+
+/* date range picker */
+.drange { display: flex; align-items: center; gap: 8px; }
+.date-inp {
+  background: var(--s2); border: 1.5px solid var(--border); color: var(--tx0);
+  border-radius: 7px; padding: 7px 12px; font-family: var(--mono); font-size: 12px;
+  outline: none; cursor: pointer; transition: border-color .15s;
+}
+.date-inp:focus { border-color: var(--accent); }
+.date-sep { color: var(--tx3); font-size: 14px; font-weight: 700; }
+
+.fsel {
+  background: var(--s2); border: 1.5px solid var(--border); color: var(--tx0);
+  border-radius: 7px; padding: 7px 28px 7px 12px; font-family: var(--font); font-size: 13px;
+  outline: none; cursor: pointer; transition: border-color .15s; min-width: 120px;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238ba4c8'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center;
+}
+.fsel:focus { border-color: var(--accent); }
+
+.range-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--asft); border: 1px solid var(--accent); border-radius: 20px;
+  padding: 4px 13px; font-family: var(--mono); font-size: 11px; color: var(--accent);
+  align-self: flex-end;
+}
+.factions { display: flex; gap: 8px; align-self: flex-end; }
+.btn { border: none; border-radius: 7px; padding: 7px 18px; font-family: var(--font); font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; }
+.btn-p { background: var(--accent); color: #fff; }
+.btn-p:hover { background: var(--a2); }
+.btn-g { background: var(--s3); border: 1.5px solid var(--border); color: var(--tx2); }
+.btn-g:hover { border-color: var(--border2); color: var(--tx0); }
+
+/* ── STAT CARDS ── */
+.srow { display: grid; grid-template-columns: repeat(auto-fit,minmax(150px,1fr)); gap: 12px; margin-bottom: 22px; }
+.sc {
+  background: var(--s1); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 16px 18px; position: relative; overflow: hidden;
+}
+.sc::before { content:''; position:absolute; top:0;left:0;right:0; height:2px; }
+.sc.ca::before{background:var(--accent)}.sc.cr::before{background:var(--red)}
+.sc.cg::before{background:var(--green)}.sc.cy::before{background:var(--yellow)}
+.sc.co::before{background:var(--orange)}.sc.ct::before{background:var(--teal)}
+.sc.cp::before{background:var(--purple)}
+.sc-l { font-size: 10px; font-weight: 700; letter-spacing: .9px; text-transform: uppercase; color: var(--tx2); margin-bottom: 7px; }
+.sc-v { font-family: var(--disp); font-size: 30px; font-weight: 800; line-height: 1; color: var(--tx0); }
+.sc-s { font-size: 10.5px; color: var(--tx3); margin-top: 4px; }
+.va{color:var(--accent)}.vr{color:var(--red)}.vg{color:var(--green)}.vy{color:var(--yellow)}.vo{color:var(--orange)}.vt{color:var(--teal)}.vp{color:var(--purple)}.vw{color:var(--tx0)}
+
+/* ── SECTION HEAD ── */
+.sh { display:flex;align-items:center;gap:10px;margin-bottom:12px;margin-top:4px; }
+.sh-t { font-size:11px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--tx2);white-space:nowrap; }
+.sh-l { flex:1;height:1px;background:var(--border); }
+.sh-r { font-size:11px;color:var(--tx3);white-space:nowrap; }
+
+/* ── UNDER-CAP BANNER ── */
+.ub-banner {
+  display:flex;gap:18px;flex-wrap:wrap;align-items:center;
+  background:var(--s1);border:1px solid var(--border);border-radius:8px;
+  padding:10px 18px;margin-bottom:16px;font-size:12px;color:var(--tx1);
+}
+.ub-item { display:flex;align-items:center;gap:8px; }
+.ub-sw { width:26px;height:14px;border-radius:3px;flex-shrink:0; }
+
+/* ── HEATMAP ── */
+.hm-card { background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:22px; }
+.hm-strip { display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-bottom:14px; }
+.hm-strip-lbl { font-size:10px;color:var(--tx2);font-weight:700;text-transform:uppercase;letter-spacing:.7px;margin-right:4px; }
+.hm-db {
+  padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;
+  border:1.5px solid var(--border);background:var(--s2);color:var(--tx2);
+  cursor:pointer;transition:all .15s;
+}
+.hm-db:hover { border-color:var(--border2);color:var(--tx0); }
+.hm-db.on { border-color:transparent;color:#fff; }
+.hmd-全部.on{background:var(--tx3);}
+.hmd-研究.on{background:#3b6fdd;}.hmd-行銷.on{background:#7b4fcf;}.hmd-設計.on{background:#0f9c6b;}
+.hmd-影音.on{background:#c95b00;}.hmd-製課.on{background:#c47d00;}.hmd-翻譯.on{background:#d63b3b;}
+
+.hm-scroll { overflow-x:auto; }
+.hm-tbl { border-collapse:separate;border-spacing:3px;min-width:max-content; }
+.hm-corner { width:96px; }
+.hm-dth { text-align:center;font-size:10px;font-weight:700;color:var(--tx2);letter-spacing:.4px;padding-bottom:5px;min-width:60px; }
+.hm-dth small { display:block;font-weight:400;color:var(--tx3);font-size:9px; }
+.hm-dth.hcol { color:var(--purple) !important; }
+.hm-nth { width:96px;padding-right:10px;text-align:right;vertical-align:middle; }
+.hm-ni { font-size:12px;color:var(--tx1);font-weight:700;white-space:nowrap; }
+.hm-nd { font-size:9.5px;color:var(--tx3);margin-top:2px; }
+
+.hm-cell { min-width:60px;height:46px;border-radius:6px;text-align:center;vertical-align:middle;cursor:pointer;transition:transform .12s,box-shadow .12s;position:relative; }
+.hm-cell:hover { transform:scale(1.08);box-shadow:0 4px 16px rgba(0,0,0,.6);z-index:10; }
+.hm-cv { font-family:var(--mono);font-size:13px;font-weight:600;display:block;line-height:1; }
+.hm-cl { font-size:9px;display:block;margin-top:2px;opacity:.8; }
+
+/* cell states */
+.hc-off  { background:var(--s2);color:var(--tx3); }
+.hc-hol  { background:var(--psft);color:var(--purple);border:1px solid rgba(192,132,252,.25); }
+.hc-low  { background:rgba(251,191,36,.14);color:#fbbf24;border:1px solid rgba(251,191,36,.22); }
+.hc-ok   { background:rgba(52,217,154,.13);color:#34d99a; }
+.hc-ov8  { background:rgba(255,95,114,.16);color:#ff5f72; }
+.hc-ov10 { background:#c0283c;color:#fff; }
+.hc-ring-day  { outline:2px dashed var(--yellow);outline-offset:-2px; }
+.hc-ring-week { outline:2px solid var(--accent);outline-offset:-2px; }
+
+.hm-leg { display:flex;gap:12px;flex-wrap:wrap;margin-top:14px;align-items:center; }
+.hm-li { display:flex;align-items:center;gap:5px;font-size:11px;color:var(--tx2); }
+.hm-sw { width:13px;height:13px;border-radius:3px;flex-shrink:0; }
+.hm-sw-d { width:13px;height:13px;border-radius:3px;border:2px dashed var(--yellow);flex-shrink:0; }
+.hm-sw-w { width:13px;height:13px;border-radius:3px;border:2px solid var(--accent);flex-shrink:0; }
+
+/* ── TABLE CARD ── */
+.tc-card { background:var(--s1);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:22px; }
+.tc-top { padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--s2); }
+.tc-title { font-size:13px;font-weight:700;color:var(--tx0); }
+.tc-filters { display:flex;gap:7px;margin-left:auto;flex-wrap:wrap; }
+.tsm {
+  background:var(--s1);border:1.5px solid var(--border);color:var(--tx1);
+  border-radius:6px;padding:5px 22px 5px 10px;font-family:var(--font);font-size:12px;
+  outline:none;cursor:pointer;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%238ba4c8'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 7px center;
+  transition:border-color .15s;
+}
+.tsm:focus { border-color:var(--accent); }
+.tc-note { font-size:11px;color:var(--tx3); }
+
+table { width:100%;border-collapse:collapse; }
+thead th { padding:8px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--tx2);letter-spacing:.6px;text-transform:uppercase;background:var(--s2);border-bottom:1px solid var(--border);white-space:nowrap; }
+thead th.tc { text-align:center; }
+thead th.hth { color:var(--purple) !important; }
+tbody tr { border-bottom:1px solid rgba(44,61,88,.8);transition:background .1s; }
+tbody tr:last-child { border-bottom:none; }
+tbody tr:hover { background:var(--s2); }
+tbody td { padding:9px 12px;font-size:13px;vertical-align:middle;color:var(--tx1); }
+tbody td.tc { text-align:center; }
+
+tbody tr.row-over  { border-left:3px solid var(--red); }
+tbody tr.row-uboth { border-left:3px solid var(--teal); }
+tbody tr.row-uweek { border-left:3px solid var(--accent); }
+tbody tr.row-uday  { border-left:3px solid var(--yellow); }
+
+/* dept tag */
+.dt { display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap; }
+.dt-研究{background:rgba(59,111,221,.22);color:#7ba8ff;}
+.dt-行銷{background:rgba(123,79,207,.22);color:#c4a0ff;}
+.dt-設計{background:rgba(15,156,107,.22);color:#4ddfa8;}
+.dt-影音{background:rgba(201,91,0,.22);color:#ffaa60;}
+.dt-製課{background:rgba(196,125,0,.22);color:#ffd060;}
+.dt-翻譯{background:rgba(214,59,59,.22);color:#ff8888;}
+
+/* status tag */
+.st { display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap; }
+.st-over   { background:var(--rsft);color:var(--red); }
+.st-normal { background:var(--gsft);color:var(--green); }
+.st-uweek  { background:var(--asft);color:var(--accent); }
+.st-uday   { background:var(--ysft);color:var(--yellow); }
+.st-uboth  { background:var(--tsft);color:var(--teal); }
+
+.hrs { font-family:var(--mono);font-size:12px;text-align:center;font-weight:600; }
+.htd { color:var(--purple) !important;font-size:11px; }
+
+.wkb { display:flex;align-items:center;gap:7px; }
+.wkb-bg { width:60px;height:4px;background:var(--s4);border-radius:3px;overflow:hidden;flex-shrink:0; }
+.wkb-f  { height:100%;border-radius:3px; }
+.wkb-v  { font-family:var(--mono);font-size:12px;white-space:nowrap;min-width:34px;color:var(--tx1); }
+
+/* ── PANELS ── */
+.two-col { display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px; }
+@media(max-width:900px){.two-col{grid-template-columns:1fr;}}
+.panel { background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px; }
+.ptitle { font-size:13px;font-weight:700;color:var(--tx0);margin-bottom:14px;display:flex;align-items:center;gap:7px; }
+.pdot  { width:7px;height:7px;border-radius:50%;flex-shrink:0; }
+
+/* ── ALERT ROW ── */
+.ar { display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--s3); }
+.ar:last-child{border-bottom:none;}
+.ai { font-size:16px;flex-shrink:0; }
+.ab { flex:1; }
+.an { font-weight:700;font-size:13px;color:var(--tx0); }
+.ad { font-size:12px;color:var(--tx2);margin-top:3px;line-height:1.6; }
+
+/* ── RANK ROW ── */
+.rr { display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--s3); }
+.rr:last-child{border-bottom:none;}
+.rn { font-family:var(--mono);font-size:11px;color:var(--tx3);width:16px;text-align:right;flex-shrink:0; }
+.ri { flex:1; }
+.rname { font-size:13px;font-weight:600;color:var(--tx0); }
+.rdept { font-size:10px;color:var(--tx3);margin-top:1px; }
+.rbb { width:72px;height:5px;background:var(--s4);border-radius:3px;overflow:hidden;flex-shrink:0; }
+.rbf { height:100%;border-radius:3px; }
+.rv  { font-family:var(--mono);font-size:12px;width:42px;text-align:right;flex-shrink:0; }
+
+/* ── FREQ ROW ── */
+.fr { display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--s3); }
+.fr:last-child{border-bottom:none;}
+.fn { flex:1;font-size:12.5px;color:var(--tx1); }
+.fps { display:flex;gap:3px; }
+.fp { width:9px;height:9px;border-radius:2px; }
+.fc { font-family:var(--mono);font-size:12px;width:24px;text-align:right;flex-shrink:0; }
+
+/* ── OVERTIME HEATMAP (加班分析) ── */
+.ot-hm-wrap { overflow-x:auto;margin-top:4px; }
+.ot-hm-tbl { border-collapse:separate;border-spacing:3px;min-width:max-content; }
+.ot-hm-nth { width:96px;padding-right:8px;text-align:right;vertical-align:middle; }
+.ot-hm-ni  { font-size:12px;color:var(--tx1);font-weight:700;white-space:nowrap; }
+.ot-hm-nd  { font-size:9.5px;color:var(--tx3); }
+.ot-hm-dth { text-align:center;font-size:9.5px;font-weight:700;color:var(--tx2);padding-bottom:5px;min-width:48px; }
+.ot-cell {
+  min-width:48px;height:42px;border-radius:6px;text-align:center;
+  vertical-align:middle;cursor:pointer;transition:transform .12s;
+}
+.ot-cell:hover { transform:scale(1.1);z-index:10; }
+.ot-cv { font-family:var(--mono);font-size:12px;font-weight:600;display:block;line-height:1; }
+.ot-cl { font-size:9px;display:block;margin-top:2px;opacity:.8; }
+.oc-0   { background:var(--s2);color:var(--tx4); }
+.oc-low { background:rgba(251,191,36,.18);color:#fbbf24;border:1px solid rgba(251,191,36,.2); }
+.oc-mid { background:rgba(251,140,58,.2);color:#fb8c3a; }
+.oc-hi  { background:rgba(255,95,114,.22);color:#ff5f72; }
+.oc-xhi { background:#b0213b;color:#fff; }
+
+/* ── PROXY BADGE ── */
+.proxy-b { display:inline-flex;align-items:center;gap:3px;background:var(--rsft);color:var(--red);font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:4px; }
+
+/* ── FREE TIME BADGE ── */
+.free-chip {
+  display:inline-flex;align-items:center;gap:3px;
+  background:var(--asft);border:1px solid rgba(91,142,255,.3);
+  color:var(--accent);font-size:10px;font-weight:700;
+  padding:1px 7px;border-radius:4px;font-family:var(--mono);
+}
+
+/* ── PAGES ── */
+.page { display:none; }
+.page.on { display:block;animation:fi .2s ease; }
+@keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+/* ── TOOLTIP ── */
+.tip { position:fixed;background:#0a0e17;border:1px solid var(--border2);color:var(--tx1);border-radius:8px;padding:10px 14px;font-size:12px;pointer-events:none;z-index:9999;display:none;max-width:240px;line-height:1.7;box-shadow:0 8px 32px rgba(0,0,0,.7); }
+.tip-name { font-weight:700;font-size:13px;color:var(--tx0);margin-bottom:3px; }
+.tip-sub  { color:var(--tx2);font-size:11px;margin-bottom:4px; }
+.tip-task { color:var(--tx2);font-size:11px; }
+.tip-hrs  { color:var(--accent);font-family:var(--mono); }
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="logo">
+    <div class="logo-icon">🛰</div>
+    <div>
+      <div class="logo-text">知識衛星</div>
+      <div class="logo-sub">人力工時管理</div>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab on"  onclick="switchTab('workload',this)">📊 工時總覽</button>
+    <button class="tab"     onclick="switchTab('leave',this)">🗓 請假狀況</button>
+    <button class="tab"     onclick="switchTab('overtime',this)">⏱ 加班分析</button>
+    <button class="tab"     onclick="switchTab('alerts',this)">🚨 警示中心</button>
+  </div>
+  <div class="topbar-r" id="topbar-r">—</div>
+</nav>
+
+<div class="main">
+
+  <!-- FILTER BAR -->
+  <div class="fbar">
+    <div class="fg">
+      <div class="fl">📅 日期範圍</div>
+      <div class="drange">
+        <input type="date" class="date-inp" id="d-from" value="2025-03-17" onchange="onDateChange()">
+        <span class="date-sep">→</span>
+        <input type="date" class="date-inp" id="d-to"   value="2025-03-21" onchange="onDateChange()">
+      </div>
+    </div>
+    <div class="fg" style="align-self:flex-end">
+      <div id="range-pill" class="range-pill">—</div>
+    </div>
+    <div class="fg">
+      <div class="fl">🏢 部門</div>
+      <select class="fsel" id="g-dept" onchange="onGlobal()">
+        <option value="">全部部門</option>
+        <option>研究</option><option>行銷</option><option>設計</option>
+        <option>影音</option><option>製課</option><option>翻譯</option>
+      </select>
+    </div>
+    <div class="fg">
+      <div class="fl">👤 夥伴</div>
+      <select class="fsel" id="g-name" onchange="onGlobal()">
+        <option value="">全部夥伴</option>
+      </select>
+    </div>
+    <div class="factions">
+      <button class="btn btn-g" onclick="resetFilter()">↺ 重置</button>
+      <button class="btn btn-p" onclick="onGlobal()">套用篩選</button>
+    </div>
+  </div>
+
+  <!-- ══ PAGE: WORKLOAD ══ -->
+  <div class="page on" id="page-workload">
+
+    <div class="ub-banner">
+      <strong style="font-size:10px;color:var(--tx2);text-transform:uppercase;letter-spacing:.7px">框線標示說明</strong>
+      <div class="ub-item">
+        <div class="ub-sw" style="border:2px dashed var(--yellow);background:var(--ysft)"></div>
+        <div><span style="color:var(--yellow);font-weight:700">日 &lt; 8h &nbsp;← 優先顯示</span><div style="font-size:10px;color:var(--tx3);margin-top:1px">可安排當日支援，兩條件同時成立時此框優先</div></div>
+      </div>
+      <div class="ub-item">
+        <div class="ub-sw" style="border:2px solid var(--accent);background:var(--asft)"></div>
+        <div><span style="color:var(--accent);font-weight:700">週 &lt; 40h</span><div style="font-size:10px;color:var(--tx3);margin-top:1px">週合計未滿，當日無日未滿時才顯示</div></div>
+      </div>
+      <div class="ub-item"><div class="ub-sw" style="background:var(--psft);border:1px solid rgba(192,132,252,.3)"></div><span style="color:var(--purple)">🎌 國定假日</span></div>
+      <span style="margin-left:auto;font-size:11px;color:var(--tx3)">⬆ 工時最空置頂</span>
+    </div>
+
+    <div class="srow" id="wl-stats"></div>
+
+    <div class="sh"><div class="sh-t">每日工時熱力圖</div><div class="sh-l"></div><div class="sh-r" id="hm-range-lbl"></div></div>
+    <div class="hm-card">
+      <div class="hm-strip" id="hm-btns"></div>
+      <div class="hm-scroll"><table class="hm-tbl" id="hm-tbl"></table></div>
+      <div class="hm-leg">
+        <div class="hm-li"><div class="hm-sw hc-off"></div>休假</div>
+        <div class="hm-li"><div class="hm-sw" style="background:var(--psft);border:1px solid rgba(192,132,252,.3)"></div>國定假日</div>
+        <div class="hm-li"><div class="hm-sw hc-low"></div>&lt; 6h</div>
+        <div class="hm-li"><div class="hm-sw hc-ok"></div>6–8h</div>
+        <div class="hm-li"><div class="hm-sw hc-ov8"></div>8–10h</div>
+        <div class="hm-li"><div class="hm-sw hc-ov10"></div>&gt; 10h</div>
+        <div class="hm-li" style="margin-left:8px;padding-left:8px;border-left:1px solid var(--border)"><div class="hm-sw-d"></div><span style="color:var(--yellow);font-weight:700">日 &lt; 8h</span><span style="color:var(--tx3);font-size:10px;margin-left:3px">← 優先</span></div>
+        <div class="hm-li"><div class="hm-sw-w"></div>週 &lt; 40h</div>
+      </div>
+    </div>
+
+    <div class="sh"><div class="sh-t">工時明細表</div><div class="sh-l"></div><div class="sh-r">排序：未滿 → 爆載 → 正常</div></div>
+    <div class="tc-card">
+      <div class="tc-top">
+        <div class="tc-title">各夥伴工時明細</div>
+        <div class="tc-filters">
+          <select class="tsm" id="tbl-dept" onchange="renderTable()">
+            <option value="">全部部門</option>
+            <option>研究</option><option>行銷</option><option>設計</option>
+            <option>影音</option><option>製課</option><option>翻譯</option>
+          </select>
+          <select class="tsm" id="tbl-status" onchange="renderTable()">
+            <option value="">全部狀態</option>
+            <option value="over">⚠ 爆載</option>
+            <option value="uboth">⊕ 日+週皆未滿</option>
+            <option value="uweek">↑ 週未滿</option>
+            <option value="uday">◌ 日未滿</option>
+            <option value="normal">✓ 正常</option>
+          </select>
+        </div>
+        <div class="tc-note">標準：8h/日 · 40h/週</div>
+      </div>
+      <div style="overflow-x:auto"><table>
+        <thead id="tbl-head"></thead>
+        <tbody id="tbl-body"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE: LEAVE ══ -->
+  <div class="page" id="page-leave">
+    <div class="srow" id="lv-stats"></div>
+    <div class="two-col">
+      <div class="panel">
+        <div class="ptitle"><div class="pdot" style="background:var(--yellow)"></div>每日請假明細</div>
+        <div style="overflow-x:auto"><table style="width:100%">
+          <thead id="lv-thead"></thead>
+          <tbody id="lv-tbody"></tbody>
+        </table></div>
+      </div>
+      <div class="panel">
+        <div class="ptitle"><div class="pdot" style="background:var(--accent)"></div>近 4 週請假頻率</div>
+        <div id="lv-freq"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ptitle"><div class="pdot" style="background:var(--red)"></div>需安排職務代理人（請假 ≥ 1 天）</div>
+      <div id="proxy-list"></div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE: OVERTIME ══ -->
+  <div class="page" id="page-overtime">
+    <div class="srow" id="ot-stats"></div>
+
+    <!-- 每日加班熱力圖 + 本期排行 側邊並列 -->
+    <div class="sh"><div class="sh-t">加班分析：每週頻率 × 每日時數</div><div class="sh-l"></div><div class="sh-r">排行依總加班時數遞減</div></div>
+    <div style="display:grid;grid-template-columns:1fr 340px;gap:14px;margin-bottom:22px;" id="ot-main-grid">
+      <div class="panel" style="padding:16px">
+        <div class="ptitle" style="margin-bottom:10px"><div class="pdot" style="background:var(--orange)"></div>每日加班時數熱力圖</div>
+        <div class="ot-hm-wrap"><table class="ot-hm-tbl" id="ot-hm-tbl"></table></div>
+        <div class="hm-leg" style="margin-top:10px">
+          <div class="hm-li"><div class="hm-sw oc-0"></div>無加班</div>
+          <div class="hm-li"><div class="hm-sw oc-low"></div>1–2h</div>
+          <div class="hm-li"><div class="hm-sw oc-mid"></div>3–4h</div>
+          <div class="hm-li"><div class="hm-sw oc-hi"></div>5–6h</div>
+          <div class="hm-li"><div class="hm-sw oc-xhi"></div>&gt;6h</div>
+        </div>
+      </div>
+      <div class="panel" style="padding:16px">
+        <div class="ptitle" style="margin-bottom:10px"><div class="pdot" style="background:var(--red)"></div>本期加班時數排行</div>
+        <div id="ot-rank"></div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="panel">
+        <div class="ptitle"><div class="pdot" style="background:var(--red)"></div>近 4 週常態加班預警（每週頻率）</div>
+        <div id="ot-freq"></div>
+      </div>
+      <div class="panel">
+        <div class="ptitle"><div class="pdot" style="background:var(--purple)"></div>每日加班明細表</div>
+        <div style="overflow-x:auto"><table style="width:100%">
+          <thead id="ot-det-head"></thead>
+          <tbody id="ot-det-body"></tbody>
+        </table></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE: ALERTS ══ -->
+  <div class="page" id="page-alerts">
+    <div class="two-col">
+      <div class="panel">
+        <div class="ptitle"><div class="pdot" style="background:var(--red)"></div>⚡ 工時爆載（依超載時數排列）</div>
+        <div id="al-over"></div>
+      </div>
+      <div class="panel">
+        <div class="ptitle"><div class="pdot" style="background:var(--teal)"></div>📉 工時未滿（每日空閒時間）</div>
+        <div id="al-under"></div>
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="panel">
+        <div class="ptitle"><div class="pdot" style="background:var(--yellow)"></div>📋 需安排代理人</div>
+        <div id="al-proxy"></div>
+      </div>
+      <div class="panel">
+        <div class="ptitle"><div class="pdot" style="background:var(--orange)"></div>🔥 常態加班預警</div>
+        <div id="al-ot"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<div class="tip" id="tip"></div>
+
+<script>
+// ════════════════════════════════════════════
+//  台灣國定假日
+// ════════════════════════════════════════════
+const TW_HOL = new Set([
+  '2025-01-01','2025-01-27','2025-01-28','2025-01-29','2025-01-30','2025-01-31',
+  '2025-02-28','2025-04-03','2025-04-04','2025-05-01','2025-05-30','2025-05-31',
+  '2025-10-06','2025-10-07','2025-10-10',
+  '2026-01-01','2026-02-16','2026-02-17','2026-02-18','2026-02-19','2026-02-20',
+  '2026-04-03','2026-04-04','2026-05-01','2026-06-19','2026-09-25','2026-10-10',
+]);
+const HOL_NAME = {
+  '2025-01-01':'元旦','2025-01-27':'除夕','2025-01-28':'春節','2025-01-29':'春節',
+  '2025-01-30':'春節','2025-01-31':'春節','2025-02-28':'和平紀念日',
+  '2025-04-03':'兒童節','2025-04-04':'清明/兒童節','2025-05-01':'勞動節',
+  '2025-05-30':'端午','2025-05-31':'端午','2025-10-06':'中秋','2025-10-07':'中秋',
+  '2025-10-10':'國慶日','2026-01-01':'元旦','2026-04-03':'兒童節',
+  '2026-04-04':'清明','2026-05-01':'勞動節','2026-06-19':'端午',
+  '2026-09-25':'中秋','2026-10-10':'國慶日',
+};
+const isHol  = d => TW_HOL.has(d);
+const holName= d => HOL_NAME[d]||'假日';
+
+// ════════════════════════════════════════════
+//  DATE RANGE UTILITIES
+// ════════════════════════════════════════════
+function getWorkdaysBetween(from, to) {
+  const days=[], cur=new Date(from+'T00:00:00');
+  const end=new Date(to+'T00:00:00');
+  while(cur<=end){
+    const dow=cur.getDay();
+    if(dow>=1&&dow<=5){
+      const ds=cur.toISOString().slice(0,10);
+      days.push({date:ds, label:['','一','二','三','四','五'][dow], holiday:isHol(ds)});
+    }
+    cur.setDate(cur.getDate()+1);
+  }
+  return days;
+}
+
+function fmtDate(d){ return d.slice(5).replace('-','/'); }
+
+// ════════════════════════════════════════════
+//  MOCK DATA
+// ════════════════════════════════════════════
+const DEPTS=['研究','行銷','設計','影音','製課','翻譯'];
+const POOL=['撰寫報告','資料分析','內容規劃','素材製作','會議討論','文件整理','企劃提案','影片剪輯','課程錄製','翻譯校對','簡報製作','市調研究'];
+const pick=()=>POOL[Math.floor(Math.random()*POOL.length)];
+function mkTasks(h){if(!h)return[];if(h<=2)return[{name:pick(),hours:h}];const h1=Math.round(h/2*10)/10;return[{name:pick(),hours:h1},{name:pick(),hours:Math.round((h-h1)*10)/10}];}
+
+// Member base data — hours[i] aligns with workdays of 2025-03-17→21 (Mon-Fri W12)
+const MEMBERS = [
+  {id:1, name:'陳曉萍',dept:'研究',hours:[8,9,7,10,8], otHours:[0,1,0,2,1], leave4w:[0,0,0,0],ot4w:[1,1,1,1]},
+  {id:2, name:'林建宏',dept:'研究',hours:[6,8,8,8,4],  otHours:[0,0,0,0,0], leave4w:[0,1,0,1],ot4w:[0,0,1,0]},
+  {id:3, name:'王怡君',dept:'研究',hours:[9,11,8,9,8], otHours:[1,3,0,1,1], leave4w:[0,0,0,0],ot4w:[1,1,1,1]},
+  {id:4, name:'吳志明',dept:'研究',hours:[8,8,8,8,8],  otHours:[0,0,0,0,0], leave4w:[1,0,1,0],ot4w:[0,0,0,0]},
+  {id:5, name:'張雅婷',dept:'行銷',hours:[10,8,9,11,10],otHours:[2,0,1,3,2],leave4w:[0,0,0,0],ot4w:[1,1,1,1]},
+  {id:6, name:'劉俊良',dept:'行銷',hours:[8,8,8,8,8],  otHours:[0,0,0,0,0], leave4w:[0,0,0,0],ot4w:[0,0,0,0]},
+  {id:7, name:'李美玲',dept:'行銷',hours:[0,8,8,8,8],  otHours:[0,0,0,0,0], leave4w:[1,0,1,1],ot4w:[0,0,0,1]},
+  {id:8, name:'黃智偉',dept:'行銷',hours:[8,6,8,8,4],  otHours:[0,0,0,0,0], leave4w:[1,1,0,1],ot4w:[0,0,0,0]},
+  {id:9, name:'蔡佳穎',dept:'設計',hours:[8,8,10,9,8], otHours:[0,0,2,1,0], leave4w:[0,0,1,0],ot4w:[0,1,0,1]},
+  {id:10,name:'許宗翰',dept:'設計',hours:[0,0,8,8,8],  otHours:[0,0,0,0,0], leave4w:[1,0,1,0],ot4w:[0,0,0,0]},
+  {id:11,name:'簡依婷',dept:'設計',hours:[8,8,8,8,8],  otHours:[0,0,0,0,0], leave4w:[0,0,0,0],ot4w:[0,0,0,0]},
+  {id:12,name:'鄭家豪',dept:'設計',hours:[7,8,8,8,5],  otHours:[0,0,0,0,0], leave4w:[1,1,1,1],ot4w:[0,0,0,0]},
+  {id:13,name:'周雨萱',dept:'影音',hours:[9,10,11,9,8], otHours:[1,2,3,1,2],leave4w:[0,0,0,0],ot4w:[1,1,1,1]},
+  {id:14,name:'楊明哲',dept:'影音',hours:[8,8,8,0,0],  otHours:[0,0,0,0,0], leave4w:[1,0,1,0],ot4w:[0,0,1,0]},
+  {id:15,name:'謝思穎',dept:'影音',hours:[8,8,8,8,6],  otHours:[0,0,0,0,0], leave4w:[0,1,0,0],ot4w:[0,0,0,0]},
+  {id:16,name:'洪建志',dept:'影音',hours:[8,12,8,10,8], otHours:[0,4,0,2,0],leave4w:[0,0,0,0],ot4w:[1,0,1,1]},
+  {id:17,name:'江淑惠',dept:'製課',hours:[8,8,8,8,8],  otHours:[0,0,0,0,0], leave4w:[0,0,0,0],ot4w:[0,0,0,0]},
+  {id:18,name:'林志豪',dept:'製課',hours:[9,8,10,9,8], otHours:[1,0,2,1,0], leave4w:[1,0,0,1],ot4w:[0,1,0,1]},
+  {id:19,name:'陳欣如',dept:'製課',hours:[4,8,8,8,8],  otHours:[0,0,0,0,0], leave4w:[0,1,1,0],ot4w:[0,0,0,0]},
+  {id:20,name:'趙博文',dept:'製課',hours:[8,8,8,8,0],  otHours:[0,0,0,0,0], leave4w:[0,0,1,1],ot4w:[0,0,0,0]},
+  {id:21,name:'何雅雯',dept:'翻譯',hours:[8,8,8,9,8],  otHours:[0,0,0,1,0], leave4w:[0,1,0,1],ot4w:[0,0,1,0]},
+  {id:22,name:'曾義峰',dept:'翻譯',hours:[11,10,9,11,8],otHours:[3,2,1,3,0],leave4w:[0,0,0,0],ot4w:[1,1,1,1]},
+  {id:23,name:'賴秀英',dept:'翻譯',hours:[8,8,8,8,8],  otHours:[0,0,0,0,0], leave4w:[0,0,0,0],ot4w:[0,0,0,0]},
+  {id:24,name:'吳柏均',dept:'翻譯',hours:[6,8,8,8,4],  otHours:[0,0,0,0,0], leave4w:[1,0,1,0],ot4w:[0,1,0,0]},
+];
+MEMBERS.forEach(m=>{ m.tasks=m.hours.map(h=>mkTasks(h)); });
+
+// LEAVE_DATA — per-day entries
+const LEAVE_DATA = {
+  '2025-W12': [
+    {name:'李美玲',dept:'行銷',date:'2025-03-17',slot:'full',type:'特休',days:1,proxy:'劉俊良'},
+    {name:'許宗翰',dept:'設計',date:'2025-03-17',slot:'full',type:'病假',days:1,proxy:'簡依婷'},
+    {name:'許宗翰',dept:'設計',date:'2025-03-18',slot:'full',type:'病假',days:1,proxy:'簡依婷'},
+    {name:'楊明哲',dept:'影音',date:'2025-03-20',slot:'full',type:'婚假',days:1,proxy:'謝思穎'},
+    {name:'楊明哲',dept:'影音',date:'2025-03-21',slot:'full',type:'婚假',days:1,proxy:'謝思穎'},
+    {name:'趙博文',dept:'製課',date:'2025-03-21',slot:'full',type:'特休',days:1,proxy:'江淑惠'},
+    {name:'林建宏',dept:'研究',date:'2025-03-17',slot:'PM', type:'事假',days:.5,proxy:'—'},
+    {name:'黃智偉',dept:'行銷',date:'2025-03-17',slot:'PM', type:'事假',days:.5,proxy:'—'},
+    {name:'黃智偉',dept:'行銷',date:'2025-03-19',slot:'AM', type:'事假',days:.5,proxy:'—'},
+    {name:'陳欣如',dept:'製課',date:'2025-03-17',slot:'AM', type:'半天假',days:.5,proxy:'—'},
+    {name:'吳柏均',dept:'翻譯',date:'2025-03-19',slot:'PM', type:'事假',days:.5,proxy:'—'},
+    {name:'吳柏均',dept:'翻譯',date:'2025-03-21',slot:'PM', type:'事假',days:.5,proxy:'—'},
+    {name:'鄭家豪',dept:'設計',date:'2025-03-17',slot:'PM', type:'特休',days:.5,proxy:'—'},
+    {name:'鄭家豪',dept:'設計',date:'2025-03-18',slot:'AM', type:'特休',days:.5,proxy:'—'},
+    {name:'鄭家豪',dept:'設計',date:'2025-03-19',slot:'PM', type:'特休',days:.5,proxy:'—'},
+  ]
+};
+
+function genLeaveData(from,to){ return LEAVE_DATA['2025-W12']||[]; }
+
+// ════════════════════════════════════════════
+//  STATUS LOGIC
+// ════════════════════════════════════════════
+function getStatus(m, days){
+  const wh=m.hours.filter((_,i)=>!days[i]?.holiday);
+  const total=wh.reduce((a,b)=>a+b,0);
+  const exp=wh.length*8;
+  const hasOver=m.hours.some((h,i)=>!days[i]?.holiday&&h>8)||total>exp;
+  if(hasOver) return 'over';
+  const wu=total<exp;
+  const du=m.hours.some((h,i)=>!days[i]?.holiday&&h>0&&h<8);
+  if(wu&&du) return 'uboth';
+  if(wu) return 'uweek';
+  if(du) return 'uday';
+  return 'normal';
+}
+const SMETA={
+  over:  {label:'⚠ 爆載',   cls:'st-over', row:'row-over'},
+  uboth: {label:'⊕ 日+週未滿',cls:'st-uboth',row:'row-uboth'},
+  uweek: {label:'↑ 週未滿', cls:'st-uweek',row:'row-uweek'},
+  uday:  {label:'◌ 日未滿', cls:'st-uday', row:'row-uday'},
+  normal:{label:'✓ 正常',   cls:'st-normal',row:''},
+};
+
+// ════════════════════════════════════════════
+//  FILTER STATE
+// ════════════════════════════════════════════
+let gFrom='2025-03-17', gTo='2025-03-21', gDept='', gName='', hmDept='';
+
+function getDays(){ return getWorkdaysBetween(gFrom, gTo); }
+
+function getFiltered(){
+  return MEMBERS.filter(m=>
+    (!gDept||m.dept===gDept)&&(!gName||m.name===gName)
+  );
+}
+function getLeaveFiltered(){
+  const all=genLeaveData(gFrom,gTo);
+  return all.filter(l=>
+    l.date>=gFrom&&l.date<=gTo&&
+    (!gDept||l.dept===gDept)&&(!gName||l.name===gName)
+  );
+}
+
+function onDateChange(){
+  const f=document.getElementById('d-from').value;
+  const t=document.getElementById('d-to').value;
+  if(f>t){ document.getElementById('d-to').value=f; gTo=f; } else gTo=t;
+  gFrom=f;
+  updatePill(); renderAll();
+}
+function onGlobal(){
+  gDept=document.getElementById('g-dept').value;
+  gName=document.getElementById('g-name').value;
+  renderAll();
+}
+function resetFilter(){
+  gFrom='2025-03-17'; gTo='2025-03-21'; gDept=''; gName=''; hmDept='';
+  document.getElementById('d-from').value=gFrom;
+  document.getElementById('d-to').value=gTo;
+  document.getElementById('g-dept').value='';
+  document.getElementById('g-name').value='';
+  document.querySelectorAll('.hm-db').forEach(b=>b.classList.remove('on'));
+  document.querySelector('.hmd-全部')?.classList.add('on');
+  updatePill(); renderAll();
+}
+
+function updatePill(){
+  const days=getDays();
+  const hols=days.filter(d=>d.holiday).length;
+  const work=days.filter(d=>!d.holiday).length;
+  const txt=`📅 ${fmtDate(gFrom)} → ${fmtDate(gTo)}　${work} 工作日${hols?`　🎌 ${hols} 假日`:''}`;
+  document.getElementById('range-pill').textContent=txt;
+  document.getElementById('topbar-r').textContent=`${fmtDate(gFrom)} → ${fmtDate(gTo)}`;
+  document.getElementById('hm-range-lbl').textContent=`${fmtDate(gFrom)} → ${fmtDate(gTo)}`;
+}
+
+function buildNameSel(){
+  const sel=document.getElementById('g-name');
+  sel.innerHTML='<option value="">全部夥伴</option>';
+  MEMBERS.forEach(m=>{ const o=document.createElement('option');o.value=m.name;o.textContent=m.name;sel.appendChild(o); });
+}
+
+// ════════════════════════════════════════════
+//  HEATMAP DEPT BUTTONS
+// ════════════════════════════════════════════
+function buildHmBtns(){
+  const w=document.getElementById('hm-btns');
+  let h='<span class="hm-strip-lbl">部門篩選</span>';
+  h+=`<button class="hm-db hmd-全部 on" onclick="setHmDept('',this)">全部</button>`;
+  DEPTS.forEach(d=>{ h+=`<button class="hm-db hmd-${d}" onclick="setHmDept('${d}',this)">${d}</button>`; });
+  w.innerHTML=h;
+}
+function setHmDept(d,btn){
+  hmDept=d;
+  document.querySelectorAll('.hm-db').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  renderHeatmap();
+}
+
+// ════════════════════════════════════════════
+//  HEATMAP
+// ════════════════════════════════════════════
+function hmCls(h,hol){
+  if(hol) return 'hc-hol';
+  if(!h)  return 'hc-off';
+  if(h<6) return 'hc-low';
+  if(h<=8)return 'hc-ok';
+  if(h<=10)return 'hc-ov8';
+  return 'hc-ov10';
+}
+
+function renderHeatmap(){
+  const days=getDays();
+  const wdays=days.filter(d=>!d.holiday);
+  let list=MEMBERS.filter(m=>(!gDept||m.dept===gDept)&&(!gName||m.name===gName)&&(!hmDept||m.dept===hmDept));
+
+  list.sort((a,b)=>{
+    const exp=wdays.length*8;
+    const ta=a.hours.filter((_,i)=>!days[i]?.holiday).reduce((s,v)=>s+v,0);
+    const tb=b.hours.filter((_,i)=>!days[i]?.holiday).reduce((s,v)=>s+v,0);
+    const ua=ta<exp,ub=tb<exp;
+    if(ua&&!ub)return-1;if(!ua&&ub)return 1;if(ua&&ub)return ta-tb;return 0;
+  });
+
+  const tbl=document.getElementById('hm-tbl');
+  let html='<thead><tr><th class="hm-corner"></th>';
+  days.forEach(d=>{
+    const hc=d.holiday?'hcol':'';
+    const hn=d.holiday?`<br><small style="color:var(--purple);font-size:8px">${holName(d.date)}</small>`:'';
+    html+=`<th class="hm-dth ${hc}">週${d.label}<small>${fmtDate(d.date)}</small>${hn}</th>`;
+  });
+  html+='<th class="hm-dth">合計</th></tr></thead><tbody>';
+
+  list.forEach(m=>{
+    const wh=m.hours.filter((_,i)=>!days[i]?.holiday);
+    const total=wh.reduce((a,b)=>a+b,0);
+    const exp=wdays.length*8;
+    const wu=total<exp;
+    html+=`<tr><td class="hm-nth"><div class="hm-ni">${m.name}</div><div class="hm-nd"><span class="dt dt-${m.dept}">${m.dept}</span></div></td>`;
+    days.forEach((d,i)=>{
+      const h=m.hours[i]??0;
+      const du=!d.holiday&&h>0&&h<8;
+      // 優先順序：日<8h（黃虛線）優先於 週<40h（藍實線）
+      // 兩條件同時成立 → 顯示黃虛線，讓主管看出哪天可安排支援
+      const ring=!d.holiday?(du?'hc-ring-day':wu?'hc-ring-week':''):'';
+      const td=encodeURIComponent(JSON.stringify({name:m.name,day:'週'+d.label,date:d.date,h,holiday:d.holiday,holName:d.holiday?holName(d.date):'',tasks:m.tasks[i]||[]}));
+      const lbl=d.holiday?holName(d.date):(h>0?'h':'休');
+      html+=`<td class="hm-cell ${hmCls(h,d.holiday)} ${ring}" data-tip="${td}" onmouseenter="showTip(event,this)" onmouseleave="hideTip()">
+        <span class="hm-cv">${d.holiday?'🎌':(h>0?h:'—')}</span>
+        <span class="hm-cl">${lbl}</span>
+      </td>`;
+    });
+    const pct=Math.min(100,(total/(exp||1))*100);
+    const bc=total>exp?'var(--red)':total<exp?'var(--accent)':'var(--green)';
+    html+=`<td style="padding:0 8px"><div style="display:flex;align-items:center;gap:6px">
+      <div style="width:50px;height:4px;background:var(--s4);border-radius:3px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${bc};border-radius:3px"></div></div>
+      <span style="font-family:var(--mono);font-size:11px;color:${bc};${wu?'font-weight:700;':''}">${total}h${wu?' ↑':''}</span>
+    </div></td></tr>`;
+  });
+  tbl.innerHTML=html+'</tbody>';
+}
+
+// ════════════════════════════════════════════
+//  DETAIL TABLE  (排序：未滿 → 爆載 → 正常)
+// ════════════════════════════════════════════
+function renderTable(){
+  const days=getDays();
+  const wdays=days.filter(d=>!d.holiday);
+  const dF=document.getElementById('tbl-dept').value;
+  const sF=document.getElementById('tbl-status').value;
+  let list=getFiltered().filter(m=>(!dF||m.dept===dF));
+  if(sF) list=list.filter(m=>getStatus(m,days)===sF);
+
+  list.sort((a,b)=>{
+    const exp=wdays.length*8;
+    const ta=a.hours.filter((_,i)=>!days[i]?.holiday).reduce((s,v)=>s+v,0);
+    const tb=b.hours.filter((_,i)=>!days[i]?.holiday).reduce((s,v)=>s+v,0);
+    const sa=getStatus(a,days),sb=getStatus(b,days);
+    const rank=s=>(['uboth','uweek','uday'].includes(s)?0:s==='over'?1:2);
+    const ra=rank(sa),rb=rank(sb);
+    if(ra!==rb)return ra-rb;
+    return ra===1?tb-ta:ta-tb;
+  });
+
+  const showCols=days.length<=12;
+  document.getElementById('tbl-head').innerHTML=`<tr>
+    <th>夥伴</th><th>部門</th>
+    ${showCols?days.map(d=>`<th class="tc ${d.holiday?'hth':''}">週${d.label}<br><small style="font-weight:400;font-size:9px">${fmtDate(d.date)}${d.holiday?'🎌':''}</small></th>`).join(''):''}
+    <th>合計</th><th>狀態</th>
+  </tr>`;
+
+  if(!list.length){ document.getElementById('tbl-body').innerHTML=`<tr><td colspan="20" style="text-align:center;padding:24px;color:var(--tx3)">無符合條件的資料</td></tr>`;return; }
+
+  const exp=wdays.length*8;
+  document.getElementById('tbl-body').innerHTML=list.map(m=>{
+    const total=m.hours.filter((_,i)=>!days[i]?.holiday).reduce((a,b)=>a+b,0);
+    const st=getStatus(m,days);
+    const meta=SMETA[st];
+    const bc=total>exp?'var(--red)':total<exp?'var(--accent)':'var(--green)';
+    const pct=Math.min(100,(total/(exp||1))*100);
+    const dayCells=showCols?days.map((d,i)=>{
+      const h=m.hours[i]??0;
+      if(d.holiday)return`<td class="hrs tc htd">🎌</td>`;
+      const c=h===0?'var(--tx3)':h>8?'var(--red)':h<8&&h>0?'var(--yellow)':'var(--green)';
+      return`<td class="hrs tc" style="color:${c};${h>0&&h<8?'font-weight:700;':''}">${h>0?h+'h':'—'}</td>`;
+    }).join(''):'';
+    return`<tr class="${meta.row}">
+      <td style="font-weight:700;color:var(--tx0)">${m.name}</td>
+      <td><span class="dt dt-${m.dept}">${m.dept}</span></td>
+      ${dayCells}
+      <td><div class="wkb"><div class="wkb-bg"><div class="wkb-f" style="width:${pct}%;background:${bc}"></div></div><span class="wkb-v" style="color:${bc}">${total}h</span></div></td>
+      <td><span class="st ${meta.cls}">${meta.label}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════
+//  STAT CARDS
+// ════════════════════════════════════════════
+function mkCard(l,v,vc,s,cc=''){
+  return`<div class="sc ${cc}"><div class="sc-l">${l}</div><div class="sc-v ${vc}">${v}</div><div class="sc-s">${s}</div></div>`;
+}
+
+function renderWlStats(){
+  const days=getDays();
+  const m=getFiltered();
+  const hols=days.filter(d=>d.holiday).length;
+  const wd=days.filter(d=>!d.holiday).length;
+  document.getElementById('wl-stats').innerHTML=
+    mkCard('夥伴數',m.length,'vw',`${DEPTS.length} 部門`,'ca')+
+    mkCard('工時爆載',m.filter(x=>getStatus(x,days)==='over').length,'vr','>8h/日 或超週標準','cr')+
+    mkCard('日+週皆未滿',m.filter(x=>getStatus(x,days)==='uboth').length,'vt','雙重未滿','ct')+
+    mkCard('週工時未滿',m.filter(x=>getStatus(x,days)==='uweek').length,'va','合計未達標準','ca')+
+    mkCard('工時正常',m.filter(x=>getStatus(x,days)==='normal').length,'vg','符合標準','cg')+
+    mkCard('國定假日',hols,'vw',`共 ${wd} 工作日`,'ca');
+}
+
+// ════════════════════════════════════════════
+//  LEAVE PAGE
+// ════════════════════════════════════════════
+function renderLvStats(){
+  const lv=getLeaveFiltered();
+  const persons=[...new Set(lv.map(l=>l.name))];
+  const proxyCount=persons.filter(n=>lv.some(l=>l.name===n&&l.days>=1)).length;
+  const scatterCount=persons.filter(n=>{const e=lv.filter(l=>l.name===n&&l.days<1);return e.length>=3;}).length;
+  const freq=MEMBERS.filter(m=>m.leave4w.reduce((a,b)=>a+b,0)>=3).length;
+  document.getElementById('lv-stats').innerHTML=
+    mkCard('請假人數',persons.length,'vy','本期有請假','ca')+
+    mkCard('需安排代理人',proxyCount,'vr','含整日請假','cr')+
+    mkCard('分散請假預警',scatterCount,'vy','半天假 ≥ 3次','cy')+
+    mkCard('頻繁請假預警',freq,'va','近4週 ≥ 3次','ca');
+}
+
+function renderLeave(){
+  renderLvStats();
+  const lv=getLeaveFiltered();
+  const days=getDays();
+  const weekDays=days.filter(d=>!d.holiday);
+
+  const byPerson={};
+  lv.forEach(l=>{
+    if(!byPerson[l.name]) byPerson[l.name]={name:l.name,dept:l.dept,proxy:l.proxy,entries:[]};
+    byPerson[l.name].entries.push(l);
+  });
+  const persons=Object.values(byPerson).sort((a,b)=>{
+    const ap=a.entries.some(e=>e.days>=1),bp=b.entries.some(e=>e.days>=1);
+    if(ap&&!bp)return-1;if(!ap&&bp)return 1;
+    return b.entries.reduce((s,e)=>s+e.days,0)-a.entries.reduce((s,e)=>s+e.days,0);
+  });
+
+  document.getElementById('lv-thead').innerHTML=`<tr>
+    <th>夥伴</th><th>部門</th>
+    ${weekDays.map(d=>`<th class="tc" style="min-width:62px">週${d.label}<br><small style="font-weight:400;font-size:9px;color:var(--tx3)">${fmtDate(d.date)}</small></th>`).join('')}
+    <th class="tc">累計</th><th>代理人</th>
+  </tr>`;
+
+  document.getElementById('lv-tbody').innerHTML=persons.map(p=>{
+    const needProxy=p.entries.some(e=>e.days>=1);
+    const scattered=p.entries.length>=3&&p.entries.every(e=>e.days<1);
+    const totalDays=p.entries.reduce((s,e)=>s+e.days,0);
+    const dayCells=weekDays.map(d=>{
+      const matches=p.entries.filter(e=>e.date===d.date);
+      if(!matches.length)return`<td class="tc" style="color:var(--tx4);font-size:11px">—</td>`;
+      return`<td style="padding:3px 5px;vertical-align:middle">${matches.map(e=>{
+        const sc=e.slot==='full'?'var(--red)':e.slot==='AM'?'var(--yellow)':'var(--orange)';
+        const bg=e.slot==='full'?'var(--rsft)':e.slot==='AM'?'var(--ysft)':'var(--osft)';
+        const sl=e.slot==='full'?'全天':e.slot==='AM'?'上午':'下午';
+        return`<div style="background:${bg};border:1px solid ${sc}44;border-radius:5px;padding:2px 5px;text-align:center;margin:1px 0">
+          <span style="color:${sc};font-size:10px;font-weight:700">${sl}</span>
+          <div style="color:var(--tx2);font-size:9px">${e.type}</div>
+        </div>`;
+      }).join('')}</td>`;
+    }).join('');
+    const rs=scattered?'border-left:3px solid var(--yellow);':needProxy?'border-left:3px solid var(--red);':'';
+    return`<tr style="${rs}">
+      <td style="font-weight:700;color:var(--tx0);white-space:nowrap">${p.name}${scattered?` <span style="background:var(--ysft);color:var(--yellow);font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px">分散</span>`:''}</td>
+      <td><span class="dt dt-${p.dept}">${p.dept}</span></td>
+      ${dayCells}
+      <td class="tc"><span style="font-family:var(--mono);font-size:13px;font-weight:700;color:${totalDays>=1?'var(--red)':'var(--yellow)'}">${totalDays}</span><span style="font-size:10px;color:var(--tx3)">天</span></td>
+      <td>${needProxy?`<span class="proxy-b">⚠ ${p.entries.find(e=>e.days>=1)?.proxy||'—'}</span>`:`<span style="color:var(--tx3);font-size:12px">不需要</span>`}</td>
+    </tr>`;
+  }).join('')||`<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--tx3)">無請假記錄</td></tr>`;
+
+  const sorted=[...MEMBERS].sort((a,b)=>b.leave4w.reduce((x,y)=>x+y,0)-a.leave4w.reduce((x,y)=>x+y,0));
+  document.getElementById('lv-freq').innerHTML=sorted.slice(0,10).map(m=>{
+    const cnt=m.leave4w.reduce((a,b)=>a+b,0);
+    const pips=m.leave4w.map(v=>`<div class="fp" style="background:${v?'var(--yellow)':'var(--s4)'}"></div>`).join('');
+    return`<div class="fr"><span class="fn"><span class="dt dt-${m.dept}">${m.dept}</span> ${m.name}</span><div class="fps">${pips}</div><span class="fc" style="color:var(--yellow)">${cnt}</span>${cnt>=3?'<span class="st st-over" style="font-size:10px;padding:2px 6px">頻繁</span>':''}</div>`;
+  }).join('');
+
+  const proxy=persons.filter(p=>p.entries.some(e=>e.days>=1));
+  document.getElementById('proxy-list').innerHTML=proxy.length
+    ?proxy.map(p=>{
+        const fe=p.entries.filter(e=>e.days>=1);
+        const dates=fe.map(e=>`${fmtDate(e.date)}（${e.type}）`).join('、');
+        return`<div class="ar"><div class="ai">🔄</div><div class="ab"><div class="an">${p.name} <span class="dt dt-${p.dept}">${p.dept}</span></div><div class="ad">請假日：${dates} · 代理人：<strong style="color:var(--tx0)">${fe[0]?.proxy||'—'}</strong></div></div></div>`;
+      }).join('')
+    :'<div style="color:var(--tx3);padding:12px 0;font-size:13px">本期無需安排代理人 🎉</div>';
+}
+
+// ════════════════════════════════════════════
+//  OVERTIME PAGE
+// ════════════════════════════════════════════
+function renderOtStats(){
+  const m=getFiltered();
+  const days=getDays();
+  const ots=m.filter(x=>x.otHours.some(h=>h>0));
+  const maxOt=ots.length?Math.max(...ots.map(x=>x.otHours.reduce((a,b)=>a+b,0))):0;
+  const chronic=m.filter(x=>x.ot4w.reduce((a,b)=>a+b,0)>=3).length;
+  document.getElementById('ot-stats').innerHTML=
+    mkCard('加班人數',ots.length,'vo','本期有加班','co')+
+    mkCard('單人最高總時',maxOt+'h','vr','本期加班','cr')+
+    mkCard('常態加班預警',chronic,'va','近4週每週加班','ca')+
+    mkCard('每日加班人數',m.filter(x=>x.otHours.filter(h=>h>0).length>=3).length,'vp','≥3天有加班','cp');
+}
+
+function otCls(h){
+  if(!h)  return 'oc-0';
+  if(h<=2)return 'oc-low';
+  if(h<=4)return 'oc-mid';
+  if(h<=6)return 'oc-hi';
+  return 'oc-xhi';
+}
+
+function renderOvertimePage(){
+  renderOtStats();
+  const m=getFiltered();
+  const days=getDays();
+  const wdays=days.filter(d=>!d.holiday);
+
+  // Only members with any OT
+  const otMembers=[...m].filter(x=>x.otHours.some(h=>h>0))
+    .sort((a,b)=>b.otHours.reduce((s,v)=>s+v,0)-a.otHours.reduce((s,v)=>s+v,0));
+
+  // ── OT Heatmap ──
+  const tbl=document.getElementById('ot-hm-tbl');
+  let html='<thead><tr><th class="hm-corner"></th>';
+  days.forEach(d=>{ html+=`<th class="ot-hm-dth">週${d.label}<br><small style="font-weight:400;color:var(--tx3);font-size:8px">${fmtDate(d.date)}</small></th>`; });
+  html+='<th class="ot-hm-dth">週計</th></tr></thead><tbody>';
+
+  otMembers.forEach(m=>{
+    const weekOt=m.otHours.reduce((a,b)=>a+b,0);
+    html+=`<tr><td class="ot-hm-nth"><div class="ot-hm-ni">${m.name}</div><div class="ot-hm-nd"><span class="dt dt-${m.dept}">${m.dept}</span></div></td>`;
+    m.otHours.forEach((h,i)=>{
+      const td=encodeURIComponent(JSON.stringify({name:m.name,day:'週'+days[i]?.label,date:days[i]?.date,otH:h}));
+      html+=`<td class="ot-cell ${otCls(h)}" data-tip="${td}" onmouseenter="showTipOt(event,this)" onmouseleave="hideTip()">
+        <span class="ot-cv">${h>0?h:'—'}</span>
+        <span class="ot-cl">${h>0?'h OT':''}</span>
+      </td>`;
+    });
+    const bc=weekOt>10?'var(--red)':weekOt>4?'var(--orange)':'var(--yellow)';
+    html+=`<td style="padding:0 8px"><span style="font-family:var(--mono);font-size:12px;font-weight:700;color:${bc}">${weekOt}h</span></td></tr>`;
+  });
+  if(!otMembers.length) html+=`<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--tx3)">本期無加班記錄</td></tr>`;
+  tbl.innerHTML=html+'</tbody>';
+
+  // ── OT Rank ──
+  const maxOt=otMembers[0]?.otHours.reduce((a,b)=>a+b,0)||1;
+  document.getElementById('ot-rank').innerHTML=otMembers.slice(0,12).map((x,i)=>{
+    const tot=x.otHours.reduce((a,b)=>a+b,0);
+    const bc=tot>10?'var(--red)':tot>4?'var(--orange)':'var(--yellow)';
+    return`<div class="rr">
+      <span class="rn">${i+1}</span>
+      <div class="ri"><div class="rname">${x.name}</div><div class="rdept"><span class="dt dt-${x.dept}">${x.dept}</span></div></div>
+      <div class="rbb"><div class="rbf" style="width:${(tot/maxOt)*100}%;background:${bc}"></div></div>
+      <span class="rv" style="color:${bc}">${tot}h</span>
+    </div>`;
+  }).join('')||'<div style="color:var(--tx3);padding:12px 0;font-size:13px">本期無加班申報</div>';
+
+  // ── Freq ──
+  const freq=[...MEMBERS].sort((a,b)=>b.ot4w.reduce((x,y)=>x+y,0)-a.ot4w.reduce((x,y)=>x+y,0));
+  document.getElementById('ot-freq').innerHTML=freq.slice(0,10).map(x=>{
+    const cnt=x.ot4w.reduce((a,b)=>a+b,0);
+    const pips=x.ot4w.map(v=>`<div class="fp" style="background:${v?'var(--orange)':'var(--s4)'}"></div>`).join('');
+    return`<div class="fr"><span class="fn"><span class="dt dt-${x.dept}">${x.dept}</span> ${x.name}</span><div class="fps">${pips}</div><span class="fc" style="color:var(--orange)">${cnt}</span>${cnt>=3?`<span class="st" style="font-size:10px;padding:2px 6px;background:var(--osft);color:var(--orange)">常態</span>`:''}</div>`;
+  }).join('');
+
+  // ── Daily OT detail table ──
+  document.getElementById('ot-det-head').innerHTML=`<tr>
+    <th>夥伴</th><th>部門</th>
+    ${days.map(d=>`<th class="tc">週${d.label}<br><small style="font-weight:400;font-size:9px">${fmtDate(d.date)}</small></th>`).join('')}
+    <th class="tc">週計</th>
+  </tr>`;
+  document.getElementById('ot-det-body').innerHTML=otMembers.map(x=>{
+    const tot=x.otHours.reduce((a,b)=>a+b,0);
+    const bc=tot>10?'var(--red)':tot>4?'var(--orange)':'var(--yellow)';
+    return`<tr>
+      <td style="font-weight:700;color:var(--tx0)">${x.name}</td>
+      <td><span class="dt dt-${x.dept}">${x.dept}</span></td>
+      ${x.otHours.map(h=>`<td class="tc hrs" style="color:${h>0?'var(--orange)':'var(--tx4)'}">${h>0?h+'h':'—'}</td>`).join('')}
+      <td class="tc"><span style="font-family:var(--mono);font-weight:700;font-size:13px;color:${bc}">${tot}h</span></td>
+    </tr>`;
+  }).join('')||`<tr><td colspan="8" style="text-align:center;padding:16px;color:var(--tx3)">本期無加班記錄</td></tr>`;
+}
+
+// ════════════════════════════════════════════
+//  ALERTS PAGE
+// ════════════════════════════════════════════
+function renderAlerts(){
+  const days=getDays();
+  const wdays=days.filter(d=>!d.holiday);
+  const m=getFiltered();
+  const exp=wdays.length*8;
+  const nd='<div style="color:var(--tx3);padding:12px 0;font-size:13px">本期無此狀況 🎉</div>';
+
+  // ── 工時爆載：依超載時數排列（最多→最少）──
+  const over=m.filter(x=>getStatus(x,days)==='over')
+    .map(x=>{
+      const tot=x.hours.filter((_,i)=>!days[i]?.holiday).reduce((a,b)=>a+b,0);
+      const overHrs=tot-exp;  // 超出的總時數
+      const maxDay=Math.max(...x.hours.filter((_,i)=>!days[i]?.holiday));
+      return{...x,tot,overHrs,maxDay};
+    })
+    .sort((a,b)=>b.overHrs-a.overHrs);  // 超載最多在最上
+
+  document.getElementById('al-over').innerHTML=over.length
+    ?over.map(x=>{
+        const overDays=days.filter((d,i)=>!d.holiday&&x.hours[i]>8)
+          .map((d,i)=>{const idx=days.indexOf(d);return`週${d.label}(${x.hours[idx]}h)`;}).join('、');
+        return`<div class="ar"><div class="ai">⚡</div><div class="ab">
+          <div class="an">${x.name} <span class="dt dt-${x.dept}">${x.dept}</span>
+            <span style="font-family:var(--mono);font-size:12px;color:var(--red);margin-left:8px">+${x.overHrs}h 超載</span>
+          </div>
+          <div class="ad">週合計 ${x.tot}h（標準 ${exp}h）${overDays?` · 超時日：${overDays}`:''}</div>
+        </div></div>`;
+      }).join('')
+    :nd;
+
+  // ── 工時未滿：每日空閒時間 ──
+  const under=m.filter(x=>['uboth','uweek','uday'].includes(getStatus(x,days)));
+  document.getElementById('al-under').innerHTML=under.length
+    ?under.map(x=>{
+        const tot=x.hours.filter((_,i)=>!days[i]?.holiday).reduce((a,b)=>a+b,0);
+        const st=getStatus(x,days);
+        const meta=SMETA[st];
+        // 每工作日的空閒時間
+        const freePerDay=wdays.map((d,wi)=>{
+          const globalIdx=days.indexOf(d);
+          const h=x.hours[globalIdx]??0;
+          const free=8-h;
+          return free>0?`<span class="free-chip">${d.label} 空 ${free}h</span>`:null;
+        }).filter(Boolean).join(' ');
+        return`<div class="ar"><div class="ai">📉</div><div class="ab">
+          <div class="an">${x.name} <span class="dt dt-${x.dept}">${x.dept}</span>
+            <span class="st ${meta.cls}" style="font-size:10px;padding:2px 7px;margin-left:6px">${meta.label}</span>
+          </div>
+          <div class="ad">週合計 ${tot}h（標準 ${exp}h，缺 ${exp-tot}h）</div>
+          <div style="margin-top:5px;display:flex;gap:4px;flex-wrap:wrap">${freePerDay||'<span style="color:var(--tx3);font-size:11px">無空閒（可能全天請假）</span>'}</div>
+        </div></div>`;
+      }).join('')
+    :nd;
+
+  // ── 需安排代理人 ──
+  const proxy=getLeaveFiltered().filter(l=>l.days>=1);
+  const byProxy={};
+  proxy.forEach(l=>{ if(!byProxy[l.name])byProxy[l.name]={...l,dates:[]}; byProxy[l.name].dates.push(l.date); });
+  document.getElementById('al-proxy').innerHTML=Object.values(byProxy).length
+    ?Object.values(byProxy).map(l=>`<div class="ar"><div class="ai">🔄</div><div class="ab">
+        <div class="an">${l.name} <span class="dt dt-${l.dept}">${l.dept}</span></div>
+        <div class="ad">請假日：${l.dates.map(d=>fmtDate(d)).join('、')} · 代理人：<strong style="color:var(--tx0)">${l.proxy}</strong></div>
+      </div></div>`).join('')
+    :nd;
+
+  // ── 常態加班 ──
+  const cot=m.filter(x=>x.ot4w.reduce((a,b)=>a+b,0)>=3);
+  document.getElementById('al-ot').innerHTML=cot.length
+    ?cot.map(x=>`<div class="ar"><div class="ai">🔥</div><div class="ab">
+        <div class="an">${x.name} <span class="dt dt-${x.dept}">${x.dept}</span></div>
+        <div class="ad">近4週加班 ${x.ot4w.reduce((a,b)=>a+b,0)} 次 · 本期 ${x.otHours.reduce((a,b)=>a+b,0)}h</div>
+      </div></div>`).join('')
+    :nd;
+}
+
+// ════════════════════════════════════════════
+//  TOOLTIP
+// ════════════════════════════════════════════
+function showTip(e,el){
+  const d=JSON.parse(decodeURIComponent(el.dataset.tip));
+  const t=document.getElementById('tip');
+  let h=`<div class="tip-name">${d.name} · ${d.day}（${d.date}）</div>`;
+  if(d.holiday){ h+=`<div class="tip-sub" style="color:var(--purple)">🎌 ${d.holName}</div>`; }
+  else{
+    h+=`<div class="tip-sub">工時：<span class="tip-hrs">${d.h}h</span></div>`;
+    if(d.tasks.length) d.tasks.forEach(t2=>{ h+=`<div class="tip-task">▸ ${t2.name} <span class="tip-hrs">${t2.hours}h</span></div>`; });
+    else h+=`<div class="tip-task">休假 / 無任務</div>`;
+  }
+  t.innerHTML=h; t.style.display='block'; moveTip(e);
+}
+function showTipOt(e,el){
+  const d=JSON.parse(decodeURIComponent(el.dataset.tip));
+  const t=document.getElementById('tip');
+  let h=`<div class="tip-name">${d.name} · ${d.day}（${d.date}）</div>`;
+  h+=`<div class="tip-sub">加班時數：<span class="tip-hrs">${d.otH>0?d.otH+'h':'無加班'}</span></div>`;
+  t.innerHTML=h; t.style.display='block'; moveTip(e);
+}
+function hideTip(){ document.getElementById('tip').style.display='none'; }
+function moveTip(e){ const t=document.getElementById('tip'); if(t.style.display==='block'){t.style.left=(e.clientX+14)+'px';t.style.top=(e.clientY+14)+'px';} }
+document.addEventListener('mousemove',moveTip);
+
+// ════════════════════════════════════════════
+//  TAB
+// ════════════════════════════════════════════
+function switchTab(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  document.getElementById('page-'+id).classList.add('on');
+  btn.classList.add('on');
+}
+
+// ════════════════════════════════════════════
+//  RENDER ALL
+// ════════════════════════════════════════════
+function renderAll(){
+  renderWlStats(); renderHeatmap(); renderTable();
+  renderLeave(); renderOvertimePage(); renderAlerts();
+}
+
+// INIT
+buildNameSel(); buildHmBtns(); updatePill(); renderAll();
+</script>
+</body>
+</html>
